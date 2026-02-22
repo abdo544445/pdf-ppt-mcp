@@ -237,30 +237,33 @@ This approach typically uses less than 5% of context compared to loading the who
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    Client(("🤖 AI Assistant\n(Claude / Cursor)")) <-->|MCP Protocol| Server["📄 Document Reader Server"]
-    
-    subgraph ServerScope ["Server"]
-        direction TB
-        Server <--> Tools{{"MCP Tools"}}
-        
-        Tools -->|read_document_page| Services
-        Tools -->|search_document| Services
-        Tools -->|get_document_info| Services
-        Tools -->|read_full_document| Services
-        Tools -->|list_directory| FS[("📁 File System")]
-        
-        subgraph Services ["Parsing Services"]
-            direction LR
-            PDF[/"PDFService\n(pdf-parse)"/]
-            Word[/"WordService\n(mammoth)"/]
-            Excel[/"ExcelService\n(xlsx)"/]
-            PPT[/"PptService\n(officeparser)"/]
-        end
-    end
+The server connects to your AI assistant (via MCP protocol) and routes requests to specialized parsing services under the hood.
 
-    Services --> FS
+```text
+[ 🤖 AI Assistant ] <── MCP Protocol ──> [ 📄 Document Reader Server ]
+(Claude, Cursor)                                      │
+                                                      │ (routes commands)
+                                                      ▼
+                                                [ MCP Tools ]
+                                                      │
+        ┌──────────────────────┬──────────────────────┼──────────────────────┐
+        ▼                      ▼                      ▼                      ▼
+[ read_page ]          [ search_doc ]         [ get_info ]          [ read_full ]
+        │                      │                      │                      │
+        └──────────────────────┴────────┬─────────────┴──────────────────────┘
+                                        │
+                                        ▼
+                             [ ⚙️  Parsing Services ]
+                                        │
+             ┌──────────────┬───────────┴───┬──────────────┐
+             ▼              ▼               ▼              ▼
+       PDFService      WordService    ExcelService    PptService
+      (pdf-parse)       (mammoth)        (xlsx)     (officeparser)
+             │              │               │              │
+             └──────────────┴───────┬───────┴──────────────┘
+                                    │
+                                    ▼
+                         [ 📁 Local File System ]
 ```
 
 ### Folder Structure
