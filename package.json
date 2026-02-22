@@ -1,6 +1,6 @@
 {
   "name": "pdf-ppt-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for reading PDF, Word, Excel, and PowerPoint files with context-efficient tools",
   "main": "build/index.js",
   "bin": {
