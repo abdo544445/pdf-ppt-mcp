@@ -1,55 +1,51 @@
 import fs from 'fs';
-const pdfParse = require('pdf-parse');
-
-// Custom page render to ensure a deterministic page separator
-function render_page(pageData: any): Promise<string> {
-    const render_options = {
-        normalizeWhitespace: false,
-        disableCombineTextItems: false
-    };
-
-    return pageData.getTextContent(render_options)
-        .then(function (textContent: any) {
-            let lastY, text = '';
-            for (let item of textContent.items) {
-                if (lastY == item.transform[5] || !lastY) {
-                    text += item.str;
-                } else {
-                    text += '\n' + item.str;
-                }
-                lastY = item.transform[5];
-            }
-            return text + '\n---PAGE_BREAK---\n';
-        });
-}
+import { PDFParse } from 'pdf-parse';
 
 export class PdfService {
     static async getDocumentPages(filePath: string): Promise<string[]> {
-        const dataBuffer = fs.readFileSync(filePath);
+        const buffer = fs.readFileSync(filePath);
+        const parser = new PDFParse({ data: buffer });
 
         try {
-            const data = await pdfParse(dataBuffer, {
-                pagerender: render_page
-            });
+            const info = await parser.getInfo({ parsePageInfo: true });
+            const totalPages = info.total;
 
-            // Split by the marker we inserted
-            const pages = data.text.split('\n---PAGE_BREAK---\n');
-            // Remove empty trailing items
-            return pages.filter((p: string) => p.trim() !== '');
+            const pages: string[] = [];
+            // Extract each page individually to stay aligned with the API contract 
+            // array of strings for each page.
+            for (let i = 1; i <= totalPages; i++) {
+                const result = await parser.getText({ partial: [i] });
+                pages.push(result.text.trim());
+            }
+            return pages;
         } catch (error) {
             console.error('Error parsing PDF:', error);
             throw new Error(`Failed to read PDF: ${error instanceof Error ? error.message : String(error)}`);
+        } finally {
+            await parser.destroy();
         }
     }
 
     static async getPage(filePath: string, pageNumber: number): Promise<{ text: string, totalPages: number }> {
-        const pages = await this.getDocumentPages(filePath);
-        if (pageNumber < 1 || pageNumber > pages.length) {
-            throw new Error(`Page number ${pageNumber} out of range (1 - ${pages.length})`);
+        const buffer = fs.readFileSync(filePath);
+        const parser = new PDFParse({ data: buffer });
+
+        try {
+            const info = await parser.getInfo({ parsePageInfo: true });
+            const totalPages = info.total;
+
+            if (pageNumber < 1 || pageNumber > totalPages) {
+                throw new Error(`Page number ${pageNumber} out of range (1 - ${totalPages})`);
+            }
+
+            const result = await parser.getText({ partial: [pageNumber] });
+
+            return {
+                text: result.text.trim(),
+                totalPages
+            };
+        } finally {
+            await parser.destroy();
         }
-        return {
-            text: pages[pageNumber - 1].trim(),
-            totalPages: pages.length
-        };
     }
 }
