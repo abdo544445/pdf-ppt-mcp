@@ -17,6 +17,7 @@
   "type": "commonjs",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
+    "jszip": "^3.10.1",
     "mammoth": "^1.11.0",
     "officeparser": "^6.0.4",
     "pdf-parse": "^2.4.5",
