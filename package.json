@@ -1,23 +1,56 @@
 {
   "name": "pdf-ppt-mcp",
   "version": "1.0.0",
-  "description": "",
+  "description": "MCP server for reading PDF, Word, Excel, and PowerPoint files with context-efficient tools",
   "main": "build/index.js",
   "bin": {
+    "pdf-ppt-mcp": "./build/index.js",
     "mcp-document-server": "./build/index.js"
   },
   "scripts": {
     "build": "tsc",
+    "prepare": "npm run build",
     "start": "node build/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "files": [
+    "build/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "pdf",
+    "word",
+    "excel",
+    "powerpoint",
+    "pptx",
+    "docx",
+    "xlsx",
+    "document-reader",
+    "ai",
+    "llm",
+    "claude",
+    "cursor",
+    "vscode"
+  ],
+  "author": "abdo544445",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abdo544445/pdf-ppt-mcp.git"
+  },
+  "homepage": "https://github.com/abdo544445/pdf-ppt-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/abdo544445/pdf-ppt-mcp/issues"
+  },
+  "engines": {
+    "node": ">=20.16.0"
+  },
   "type": "commonjs",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
-    "jszip": "^3.10.1",
     "mammoth": "^1.11.0",
     "officeparser": "^6.0.4",
     "pdf-parse": "^2.4.5",
@@ -26,6 +59,7 @@
   "devDependencies": {
     "@types/node": "^25.3.0",
     "@types/pdfkit": "^0.17.5",
+    "jszip": "^3.10.1",
     "pdfkit": "^0.17.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
