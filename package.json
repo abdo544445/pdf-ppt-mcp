@@ -1,0 +1,30 @@
+{
+  "name": "pdf-ppt-mcp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/index.js",
+  "bin": {
+    "mcp-document-server": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "mammoth": "^1.11.0",
+    "officeparser": "^6.0.4",
+    "pdf-parse": "^2.4.5",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
