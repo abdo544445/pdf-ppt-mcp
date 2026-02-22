@@ -1,16 +1,16 @@
-# 📄 Document Reader MCP Server
+# Document Reader MCP Server
 
-> **An MCP (Model Context Protocol) server that lets AI assistants read PDF, Word, Excel, and PowerPoint files — without blowing up the context window.**
+> An MCP (Model Context Protocol) server that lets AI assistants read PDF, Word, Excel, and PowerPoint files without blowing up the context window.
 
 [![npm](https://img.shields.io/npm/v/pdf-ppt-mcp)](https://npmjs.com/package/pdf-ppt-mcp)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ---
 
-## ✨ Why this exists
+## Why this exists
 
 Most AI tools try to dump an entire document into the prompt at once. This server solves that with **context-efficient reading** by exposing tools that:
-- Get document **metadata first** (page count, sheet names)  
+- Get document **metadata first** (page count, sheet names)
 - Read **one page / slide / sheet at a time**
 - **Search** across the entire document and return only relevant snippets
 
@@ -18,7 +18,7 @@ This keeps your context window clean while still giving the AI access to large d
 
 ---
 
-## 📦 Supported File Types
+## Supported File Types
 
 | Format | Extension(s) | How it's read |
 |--------|-------------|---------------|
@@ -29,7 +29,7 @@ This keeps your context window clean while still giving the AI access to large d
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Run instantly with npx (recommended)
 ```bash
@@ -53,7 +53,7 @@ npm start
 
 ---
 
-## 🔌 Integration Guide
+## Integration Guide
 
 ### VS Code (Cline / RooCode / Copilot MCP)
 
@@ -72,7 +72,7 @@ Add to your MCP config file (usually `~/.cline/mcp_settings.json` or `.vscode/mc
 
 ### Cursor
 
-Open **Settings → MCP** and add:
+Open **Settings -> MCP** and add:
 
 ```json
 {
@@ -115,10 +115,10 @@ In your `claude_desktop_config.json`:
 
 ---
 
-## 🛠️ Available MCP Tools
+## Available MCP Tools
 
 ### 1. `get_document_info`
-> **Always call this first.** Returns metadata so the AI knows the document's size before trying to read it.
+Always call this first. Returns metadata so the AI knows the document's size before trying to read it.
 
 **Input:**
 | Parameter | Type | Description |
@@ -127,20 +127,20 @@ In your `claude_desktop_config.json`:
 
 **Example output:**
 ```
-📄 report.pdf — PDF document
-• Total pages: 42
+report.pdf — PDF document
+Total pages: 42
 
-📊 data.xlsx — Excel workbook  
-• Sheets (3): "Summary", "Q1 Data", "Q2 Data"
+data.xlsx — Excel workbook
+Sheets (3): "Summary", "Q1 Data", "Q2 Data"
 
-📊 slides.pptx — PowerPoint presentation
-• Total slides: 12
+slides.pptx — PowerPoint presentation
+Total slides: 12
 ```
 
 ---
 
 ### 2. `read_document_page`
-> Read **one specific page, chunk, or sheet** at a time to avoid loading the whole document.
+Read one specific page, chunk, or sheet at a time to avoid loading the whole document.
 
 **Input:**
 | Parameter | Type | Description |
@@ -166,7 +166,7 @@ In your `claude_desktop_config.json`:
 ---
 
 ### 3. `search_document`
-> Search the **entire document** for a keyword. Returns matching pages/slides/chunks with surrounding context snippets — no need to read every page manually.
+Search the entire document for a keyword. Returns matching pages/slides/chunks with surrounding context snippets.
 
 **Input:**
 | Parameter | Type | Description |
@@ -188,7 +188,7 @@ Found 2 match(es) for "revenue":
 ---
 
 ### 4. `list_directory`
-> List all supported document files in a folder. Useful for discovering what documents are available.
+List all supported document files in a folder. Useful for discovering what documents are available.
 
 **Input:**
 | Parameter | Type | Description |
@@ -208,9 +208,9 @@ presentation.pptx  (8,902.1 KB)
 ---
 
 ### 5. `read_full_document`
-> Read the **entire document** at once. Best for small documents only.
+Read the entire document at once. Best for small documents only.
 
-> ⚠️ **Warning:** Use `read_document_page` or `search_document` for large documents to avoid filling the context window.
+> **Warning:** Use `read_document_page` or `search_document` for large documents to avoid filling the context window.
 
 **Input:**
 | Parameter | Type | Description |
@@ -220,27 +220,27 @@ presentation.pptx  (8,902.1 KB)
 
 ---
 
-## 🤖 Recommended Usage Pattern for AI Assistants
+## Recommended Usage Pattern for AI Assistants
 
 When an AI assistant uses this server, the recommended flow is:
 
 ```
-1. list_directory("/path/to/folder")          → discover available documents
-2. get_document_info("/path/to/doc.pdf")      → learn total pages
-3. search_document("/path/to/doc.pdf", "key term")  → find relevant pages
-4. read_document_page("/path/to/doc.pdf", "7")      → read specific page
+1. list_directory("/path/to/folder")                   -> discover available documents
+2. get_document_info("/path/to/doc.pdf")               -> learn total pages
+3. search_document("/path/to/doc.pdf", "key term")     -> find relevant pages
+4. read_document_page("/path/to/doc.pdf", "7")         -> read specific page
 ```
 
-This approach typically uses **< 5% of context** compared to loading the whole document.
+This approach typically uses less than 5% of context compared to loading the whole document.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 pdf-ppt-mcp/
 ├── src/
-│   ├── index.ts                  # MCP Server — tool definitions & routing
+│   ├── index.ts                  # MCP Server - tool definitions and routing
 │   └── services/
 │       ├── pdf.service.ts        # PDF parsing (pdf-parse v2)
 │       ├── word.service.ts       # Word parsing (mammoth)
@@ -264,7 +264,7 @@ pdf-ppt-mcp/
 
 ---
 
-## 💻 Development
+## Development
 
 ```bash
 # Clone the repo
@@ -283,14 +283,14 @@ npm start
 
 ---
 
-## 📋 Requirements
+## Requirements
 
 - **Node.js** >= 20.16.0
 - An MCP-compatible client (VS Code with Cline/RooCode, Cursor, Antigravity, Claude Desktop, etc.)
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [ ] Publish to npm registry for true `npx pdf-ppt-mcp` one-line install
 - [ ] VS Code Extension wrapper for GUI-based document selection
@@ -300,12 +300,12 @@ npm start
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-Pull requests are welcome! For major changes, please open an issue first.
+Pull requests are welcome. For major changes, please open an issue first.
 
 ---
 
-## 📝 License
+## License
 
-MIT © [abdo544445](https://github.com/abdo544445)
+MIT (c) [abdo544445](https://github.com/abdo544445)
