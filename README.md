@@ -241,7 +241,7 @@ This approach typically uses less than 5% of context compared to loading the who
 flowchart LR
     Client(("🤖 AI Assistant\n(Claude / Cursor)")) <-->|MCP Protocol| Server["📄 Document Reader Server"]
     
-    subgraph Server
+    subgraph ServerScope ["Server"]
         direction TB
         Server <--> Tools{{"MCP Tools"}}
         
