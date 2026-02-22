@@ -1,4 +1,30 @@
+# Dependencies
 node_modules/
+
+# Build output
 build/
+
+# Environment
 .env
 .DS_Store
+
+# ── Temp / test working files (not part of source code) ──────────────────────
+
+# Test documents
+*.pdf
+*.docx
+*.xlsx
+*.xls
+*.pptx
+*.ppt
+*.txt
+*.csv
+*.log
+
+# Test/dev helper scripts (only keep src/ and root config files)
+create-pdf.ts
+create-test-files.ts
+debug.ts
+test-client.ts
+test-results.txt
+pType.txt
