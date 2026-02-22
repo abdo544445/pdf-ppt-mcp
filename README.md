@@ -292,7 +292,7 @@ npm start
 
 ## Roadmap
 
-- [ ] Publish to npm registry for true `npx pdf-ppt-mcp` one-line install
+- [x] Published to npm — install with `npx -y pdf-ppt-mcp`
 - [ ] VS Code Extension wrapper for GUI-based document selection
 - [ ] Support for `.csv` files (direct reading)
 - [ ] Support for password-protected PDFs
