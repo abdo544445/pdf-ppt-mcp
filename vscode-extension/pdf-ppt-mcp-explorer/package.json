@@ -2,7 +2,7 @@
   "name": "pdf-ppt-mcp-explorer",
   "displayName": "PDF/PPT MCP Explorer",
   "description": "Visual explorer and AI config wrapper for pdf-ppt-mcp",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "Abdoalatrash",
   "engines": {
     "vscode": "^1.90.0"
@@ -10,6 +10,19 @@
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "mcp",
+    "pdf",
+    "ai",
+    "claude",
+    "cline",
+    "roo"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abdo544445/pdf-ppt-mcp.git"
+  },
   "activationEvents": [
     "onView:mcp-docs"
   ],
