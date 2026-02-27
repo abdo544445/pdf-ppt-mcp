@@ -3,6 +3,7 @@
   "displayName": "PDF/PPT MCP Explorer",
   "description": "Visual explorer and AI config wrapper for pdf-ppt-mcp",
   "version": "0.0.1",
+  "publisher": "Abdoalatrash",
   "engines": {
     "vscode": "^1.109.0"
   },
