@@ -235,6 +235,23 @@ This approach typically uses less than 5% of context compared to loading the who
 
 ---
 
+## VS Code Extension (PDF/PPT MCP Explorer)
+
+This project includes an official Visual Studio Code extension that acts as a graphical wrapper. It makes it seamless to find, manage, and process supported documents visually, and automatically connects them to your AI assistants.
+
+### Extension Features
+
+- **Document Explorer:** Instantly find all supported documents (.pdf, .docx, .xlsx, .pptx, .csv) cleanly categorized in a new sidebar tree view.
+- **Auto-Configure Assistant:** Single-click configuration to inject the MCP Server directly into Cline or RooCode JSON configurations globally across VS Code and Cursor.
+- **Copy Path for AI:** Copy well-crafted prompts with absolute paths for your AI assistant in one click.
+- **Ask AI about Document:** Right-click to automatically generate a customized prompt with your specific question regarding the document.
+- **Open Externally:** Launch native applications (Word, Excel, Acrobat) directly from the VS Code sidebar.
+- **Add External Files:** Browse your operating system and instantly copy external documents into your active workspace so the AI can read them.
+- **Workspace Management:** Delete documents or reveal them in your OS file explorer directly from the extension.
+- **Live Updating:** Filesystem watchers automatically keep your sidebar in sync with your actual project directory.
+
+---
+
 ## Architecture
 
 The server connects to your AI assistant (via MCP protocol) and routes requests to specialized parsing services under the hood.
@@ -323,7 +340,7 @@ npm start
 ## Roadmap
 
 - [x] Published to npm — install with `npx -y pdf-ppt-mcp`
-- [ ] VS Code Extension wrapper for GUI-based document selection
+- [x] VS Code Extension wrapper for GUI-based document selection
 - [x] Support for `.csv` files (direct reading)
 - [x] Support for password-protected PDFs
 - [x] OCR for scanned/image-based PDFs
