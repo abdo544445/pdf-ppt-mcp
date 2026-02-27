@@ -1,0 +1,120 @@
+{
+  "name": "pdf-ppt-mcp-explorer",
+  "displayName": "PDF/PPT MCP Explorer",
+  "description": "Visual explorer and AI config wrapper for pdf-ppt-mcp",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.109.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:mcp-docs"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "pdf-ppt-mcp-explorer",
+          "title": "PDF/PPT MCP",
+          "icon": "$(search-view-icon)"
+        }
+      ]
+    },
+    "views": {
+      "pdf-ppt-mcp-explorer": [
+        {
+          "id": "mcp-docs",
+          "name": "Supported Documents",
+          "icon": "$(file-code)"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "pdf-ppt-mcp-explorer.previewDocument",
+        "title": "Preview Document Text",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "pdf-ppt-mcp-explorer.ocrDocument",
+        "title": "Force OCR (Slow)",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "pdf-ppt-mcp-explorer.copyPathForAI",
+        "title": "Copy Prompt for AI",
+        "icon": "$(clippy)"
+      },
+      {
+        "command": "pdf-ppt-mcp-explorer.installMcpServer",
+        "title": "Auto-Configure AI Assistant",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "pdf-ppt-mcp-explorer.refreshList",
+        "title": "Refresh Documents",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "pdf-ppt-mcp-explorer.installMcpServer",
+          "when": "view == mcp-docs",
+          "group": "navigation"
+        },
+        {
+          "command": "pdf-ppt-mcp-explorer.refreshList",
+          "when": "view == mcp-docs",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "pdf-ppt-mcp-explorer.previewDocument",
+          "group": "inline"
+        },
+        {
+          "command": "pdf-ppt-mcp-explorer.copyPathForAI",
+          "group": "inline"
+        },
+        {
+          "command": "pdf-ppt-mcp-explorer.ocrDocument",
+          "when": "viewItem =~ /pdf$/",
+          "group": "inline"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "pdf-ppt-mcp-explorer.previewDocument",
+          "when": "resourceExtname == .pdf || resourceExtname == .docx || resourceExtname == .xlsx || resourceExtname == .ppt || resourceExtname == .csv",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.109.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.39.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0"
+  },
+  "dependencies": {
+    "pdf-ppt-mcp": "^1.1.0"
+  }
+}
