@@ -14,6 +14,8 @@ import { PdfService } from "./services/pdf.service.js";
 import { WordService } from "./services/word.service.js";
 import { ExcelService } from "./services/excel.service.js";
 import { PptService } from "./services/ppt.service.js";
+import { CsvService } from "./services/csv.service.js";
+import { OcrService } from "./services/ocr.service.js";
 
 // ─── Server ──────────────────────────────────────────────────────────────────
 
@@ -35,7 +37,11 @@ const TOOLS: Tool[] = [
             properties: {
                 filePath: {
                     type: "string",
-                    description: "Absolute path to the file (.pdf, .docx, .xlsx, .xls, .pptx, .ppt)",
+                    description: "Absolute path to the file (.pdf, .docx, .xlsx, .xls, .pptx, .ppt, .csv)",
+                },
+                password: {
+                    type: "string",
+                    description: "Optional password for encrypted/protected PDF files",
                 },
             },
             required: ["filePath"],
@@ -46,7 +52,7 @@ const TOOLS: Tool[] = [
         description:
             "Read a specific page, chunk, or sheet from a document. " +
             "For PDF: provide the page number (e.g. '1'). " +
-            "For Word/PPT: provide the chunk number (e.g. '1'). " +
+            "For Word/PPT/CSV: provide the chunk number (e.g. '1'). " +
             "For Excel: provide the exact sheet name (e.g. 'Sheet1'). " +
             "Use get_document_info first to know valid ranges.",
         inputSchema: {
@@ -59,7 +65,11 @@ const TOOLS: Tool[] = [
                 pageOrSheet: {
                     type: "string",
                     description:
-                        "Page/chunk number (1-indexed) for PDF/Word/PPT, OR the sheet name for Excel",
+                        "Page/chunk number (1-indexed) for PDF/Word/PPT/CSV, OR the sheet name for Excel",
+                },
+                password: {
+                    type: "string",
+                    description: "Optional password for encrypted/protected PDF files",
                 },
             },
             required: ["filePath", "pageOrSheet"],
@@ -82,6 +92,10 @@ const TOOLS: Tool[] = [
                     type: "string",
                     description: "The text to search for (case-insensitive)",
                 },
+                password: {
+                    type: "string",
+                    description: "Optional password for encrypted/protected PDF files",
+                },
             },
             required: ["filePath", "query"],
         },
@@ -89,7 +103,7 @@ const TOOLS: Tool[] = [
     {
         name: "list_directory",
         description:
-            "List all supported document files (.pdf, .docx, .xlsx, .xls, .pptx, .ppt) in a directory. " +
+            "List all supported document files (.pdf, .docx, .xlsx, .xls, .pptx, .ppt, .csv) in a directory. " +
             "Useful for discovering which files are available to read.",
         inputSchema: {
             type: "object",
@@ -119,6 +133,32 @@ const TOOLS: Tool[] = [
                     type: "number",
                     description: "Maximum number of pages/chunks to read (default: 10, max: 50)",
                 },
+                password: {
+                    type: "string",
+                    description: "Optional password for encrypted/protected PDF files",
+                },
+            },
+            required: ["filePath"],
+        },
+    },
+    {
+        name: "ocr_pdf",
+        description:
+            "OCR (Optical Character Recognition) for scanned or image-based PDF files. " +
+            "Use this ONLY when read_document_page returns empty or garbled text, " +
+            "which indicates the PDF contains scanned images instead of selectable text. " +
+            "WARNING: OCR is slow (3-10 seconds per page). Prefer read_document_page first.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                filePath: {
+                    type: "string",
+                    description: "Absolute path to the PDF file",
+                },
+                pageNumber: {
+                    type: "number",
+                    description: "Page number to OCR (1-indexed). If omitted, OCR all pages (max 20).",
+                },
             },
             required: ["filePath"],
         },
@@ -127,7 +167,7 @@ const TOOLS: Tool[] = [
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const SUPPORTED_EXTENSIONS = new Set([".pdf", ".docx", ".xlsx", ".xls", ".pptx", ".ppt"]);
+const SUPPORTED_EXTENSIONS = new Set([".pdf", ".docx", ".xlsx", ".xls", ".pptx", ".ppt", ".csv"]);
 
 function getExt(filePath: string): string {
     return path.extname(filePath).toLowerCase();
@@ -189,6 +229,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     assertFileExists(filePath);
     assertSupported(filePath);
     const ext = getExt(filePath);
+    const password = args?.password ? String(args.password) : undefined;
 
     try {
         // ── get_document_info ────────────────────────────────────────────────
@@ -197,7 +238,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const fileName = path.basename(filePath);
 
             if (ext === ".pdf") {
-                const { totalPages } = await PdfService.getPage(filePath, 1);
+                const { totalPages } = await PdfService.getPage(filePath, 1, password);
                 info = `📄 **${fileName}** — PDF document\n• Total pages: ${totalPages}`;
             } else if (ext === ".docx") {
                 const chunks = await WordService.getDocumentChunks(filePath);
@@ -208,6 +249,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             } else if (ext === ".pptx" || ext === ".ppt") {
                 const slides = await PptService.getSlides(filePath);
                 info = `📊 **${fileName}** — PowerPoint presentation\n• Total slides: ${slides.length}`;
+            } else if (ext === ".csv") {
+                const csvInfo = CsvService.getInfo(filePath);
+                info = `📊 **${fileName}** — CSV file\n• Total rows: ${csvInfo.totalRows}\n• Columns: ${csvInfo.columns.join(", ")}`;
             }
 
             return { content: [{ type: "text", text: info }] };
@@ -223,7 +267,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             if (ext === ".pdf") {
                 const pageNum = parseInt(pageOrSheet, 10);
                 if (isNaN(pageNum)) throw new Error("For PDF files, pageOrSheet must be a number.");
-                const res = await PdfService.getPage(filePath, pageNum);
+                const res = await PdfService.getPage(filePath, pageNum, password);
                 result = `--- Page ${pageNum} of ${res.totalPages} ---\n\n${res.text}`;
             } else if (ext === ".docx") {
                 const chunkNum = parseInt(pageOrSheet, 10);
@@ -238,6 +282,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 if (isNaN(chunkNum)) throw new Error("For PPT files, pageOrSheet must be a number.");
                 const res = await PptService.getChunk(filePath, chunkNum);
                 result = `--- Chunk ${chunkNum} of ${res.totalChunks} ---\n\n${res.text}`;
+            } else if (ext === ".csv") {
+                const chunkNum = parseInt(pageOrSheet, 10);
+                if (isNaN(chunkNum)) throw new Error("For CSV files, pageOrSheet must be a chunk number.");
+                const res = CsvService.getChunk(filePath, chunkNum);
+                result = `--- Chunk ${chunkNum} of ${res.totalChunks} (${res.totalRows} total rows) ---\n\n${res.text}`;
             }
 
             return { content: [{ type: "text", text: result }] };
@@ -251,9 +300,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const matches: string[] = [];
 
             if (ext === ".pdf") {
-                const { totalPages } = await PdfService.getPage(filePath, 1);
+                const { totalPages } = await PdfService.getPage(filePath, 1, password);
                 for (let i = 1; i <= totalPages; i++) {
-                    const { text } = await PdfService.getPage(filePath, i);
+                    const { text } = await PdfService.getPage(filePath, i, password);
                     if (text.toLowerCase().includes(query.toLowerCase())) {
                         matches.push(`[Page ${i}]:\n...${getSnippet(text, query)}...`);
                     }
@@ -280,6 +329,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                         matches.push(`[Chunk ${i + 1}]:\n...${getSnippet(chunk, query)}...`);
                     }
                 });
+            } else if (ext === ".csv") {
+                const csvMatches = CsvService.search(filePath, query);
+                csvMatches.forEach(m => matches.push(m));
             }
 
             if (matches.length === 0) {
@@ -299,10 +351,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const parts: string[] = [];
 
             if (ext === ".pdf") {
-                const { totalPages } = await PdfService.getPage(filePath, 1);
+                const { totalPages } = await PdfService.getPage(filePath, 1, password);
                 const limit = Math.min(totalPages, maxChunks);
                 for (let i = 1; i <= limit; i++) {
-                    const { text } = await PdfService.getPage(filePath, i);
+                    const { text } = await PdfService.getPage(filePath, i, password);
                     parts.push(`--- Page ${i} ---\n${text}`);
                 }
                 if (totalPages > limit) parts.push(`\n⚠️ Truncated: showing ${limit} of ${totalPages} pages.`);
@@ -322,9 +374,39 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 const limit = Math.min(chunks.length, maxChunks);
                 chunks.slice(0, limit).forEach((c, i) => parts.push(`--- Chunk ${i + 1} ---\n${c}`));
                 if (chunks.length > limit) parts.push(`\n⚠️ Truncated: showing ${limit} of ${chunks.length} chunks.`);
+            } else if (ext === ".csv") {
+                const content = CsvService.getFullContent(filePath);
+                parts.push(`--- CSV Content ---\n${content}`);
             }
 
             return { content: [{ type: "text", text: parts.join("\n\n") }] };
+        }
+
+        // ── ocr_pdf ──────────────────────────────────────────────────────────
+        if (name === "ocr_pdf") {
+            if (getExt(filePath) !== ".pdf") throw new Error("ocr_pdf only works with PDF files.");
+            const pageNumber = args?.pageNumber ? Number(args.pageNumber) : undefined;
+
+            if (pageNumber) {
+                const { text, totalPages } = await OcrService.ocrPage(filePath, pageNumber);
+                return {
+                    content: [{
+                        type: "text",
+                        text: `--- OCR Page ${pageNumber} of ${totalPages} ---\n\n${text || "(No text detected on this page)"}`,
+                    }],
+                };
+            } else {
+                const pages = await OcrService.ocrAllPages(filePath);
+                const parts = pages.map((text, i) =>
+                    `--- OCR Page ${i + 1} ---\n${text || "(No text detected)"}`
+                );
+                return {
+                    content: [{
+                        type: "text",
+                        text: parts.join("\n\n"),
+                    }],
+                };
+            }
         }
 
         throw new Error(`Unknown tool: ${name}`);

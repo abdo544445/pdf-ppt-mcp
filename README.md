@@ -324,9 +324,9 @@ npm start
 
 - [x] Published to npm — install with `npx -y pdf-ppt-mcp`
 - [ ] VS Code Extension wrapper for GUI-based document selection
-- [ ] Support for `.csv` files (direct reading)
-- [ ] Support for password-protected PDFs
-- [ ] OCR for scanned/image-based PDFs
+- [x] Support for `.csv` files (direct reading)
+- [x] Support for password-protected PDFs
+- [x] OCR for scanned/image-based PDFs
 
 ---
 

@@ -2,17 +2,17 @@ import fs from 'fs';
 import { PDFParse } from 'pdf-parse';
 
 export class PdfService {
-    static async getDocumentPages(filePath: string): Promise<string[]> {
+    static async getDocumentPages(filePath: string, password?: string): Promise<string[]> {
         const buffer = fs.readFileSync(filePath);
-        const parser = new PDFParse({ data: buffer });
+        const opts: any = { data: buffer };
+        if (password) opts.password = password;
+        const parser = new PDFParse(opts);
 
         try {
             const info = await parser.getInfo({ parsePageInfo: true });
             const totalPages = info.total;
 
             const pages: string[] = [];
-            // Extract each page individually to stay aligned with the API contract 
-            // array of strings for each page.
             for (let i = 1; i <= totalPages; i++) {
                 const result = await parser.getText({ partial: [i] });
                 pages.push(result.text.trim());
@@ -20,15 +20,21 @@ export class PdfService {
             return pages;
         } catch (error) {
             console.error('Error parsing PDF:', error);
-            throw new Error(`Failed to read PDF: ${error instanceof Error ? error.message : String(error)}`);
+            const msg = error instanceof Error ? error.message : String(error);
+            if (msg.includes('password') || msg.includes('encrypted')) {
+                throw new Error('This PDF is password-protected. Please provide the password using the "password" parameter.');
+            }
+            throw new Error(`Failed to read PDF: ${msg}`);
         } finally {
             await parser.destroy();
         }
     }
 
-    static async getPage(filePath: string, pageNumber: number): Promise<{ text: string, totalPages: number }> {
+    static async getPage(filePath: string, pageNumber: number, password?: string): Promise<{ text: string, totalPages: number }> {
         const buffer = fs.readFileSync(filePath);
-        const parser = new PDFParse({ data: buffer });
+        const opts: any = { data: buffer };
+        if (password) opts.password = password;
+        const parser = new PDFParse(opts);
 
         try {
             const info = await parser.getInfo({ parsePageInfo: true });
@@ -44,6 +50,12 @@ export class PdfService {
                 text: result.text.trim(),
                 totalPages
             };
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : String(error);
+            if (msg.includes('password') || msg.includes('encrypted')) {
+                throw new Error('This PDF is password-protected. Please provide the password using the "password" parameter.');
+            }
+            throw error;
         } finally {
             await parser.destroy();
         }

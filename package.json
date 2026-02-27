@@ -51,9 +51,12 @@
   "type": "commonjs",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
+    "canvas": "^3.2.1",
     "mammoth": "^1.11.0",
     "officeparser": "^6.0.4",
     "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^5.4.296",
+    "tesseract.js": "^7.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
