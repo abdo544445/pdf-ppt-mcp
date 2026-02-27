@@ -6,6 +6,13 @@ export function activate(context: vscode.ExtensionContext) {
 	const documentProvider = new DocumentTreeProvider();
 	vscode.window.registerTreeDataProvider('mcp-docs', documentProvider);
 
+	// Set up file watchers to automatically refresh the sidebar
+	const watcher = vscode.workspace.createFileSystemWatcher('**/*.{pdf,docx,xlsx,xls,pptx,ppt,csv}');
+	watcher.onDidCreate(() => documentProvider.refresh());
+	watcher.onDidChange(() => documentProvider.refresh());
+	watcher.onDidDelete(() => documentProvider.refresh());
+	context.subscriptions.push(watcher);
+
 	context.subscriptions.push(
 		vscode.commands.registerCommand('pdf-ppt-mcp-explorer.refreshList', () => documentProvider.refresh()),
 
@@ -18,14 +25,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 		vscode.commands.registerCommand('pdf-ppt-mcp-explorer.previewDocument', async (node: DocumentNode | vscode.Uri) => {
 			const filePath = node instanceof vscode.Uri ? node.fsPath : node.filePath;
-			// Provide a quick note as a virtual document
 			const uri = vscode.Uri.parse(`untitled:Preview-${path.basename(filePath)}.txt`);
 			const doc = await vscode.workspace.openTextDocument(uri);
 			const editor = await vscode.window.showTextDocument(doc);
 
-			// Note: Since importing the huge backend package into an extension 
-			// has bundling complications, we simply copy the path for the real backend
-			// or we instruct the user to use the MCP Server.
 			editor.edit(editBuilder => {
 				editBuilder.insert(new vscode.Position(0, 0),
 					`// This is a placeholder preview for ${path.basename(filePath)}\n` +
@@ -36,27 +39,44 @@ export function activate(context: vscode.ExtensionContext) {
 		}),
 
 		vscode.commands.registerCommand('pdf-ppt-mcp-explorer.installMcpServer', async () => {
-			const configPath = path.join(process.env.APPDATA || process.env.HOME || '', 'Code', 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json');
+			const appData = process.env.APPDATA || (process.platform === 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME + '/.config');
 
-			if (fs.existsSync(configPath)) {
-				try {
-					const content = fs.readFileSync(configPath, 'utf-8');
-					const json = JSON.parse(content);
+			// Checks for both Roo Code and Cline configurations
+			const configPaths = [
+				path.join(appData, 'Code', 'User', 'globalStorage', 'rooveterinaryinc.roo-cline', 'settings', 'cline_mcp_settings.json'),
+				path.join(appData, 'Code', 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json'),
+				// Cursor path
+				path.join(appData, 'Cursor', 'User', 'globalStorage', 'rooveterinaryinc.roo-cline', 'settings', 'cline_mcp_settings.json'),
+				path.join(appData, 'Cursor', 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json')
+			];
 
-					if (!json.mcpServers) json.mcpServers = {};
-					json.mcpServers["pdf-ppt"] = {
-						"command": "npx",
-						"args": ["-y", "pdf-ppt-mcp@latest"]
-					};
+			let success = false;
 
-					fs.writeFileSync(configPath, JSON.stringify(json, null, 2));
-					vscode.window.showInformationMessage('Successfully added pdf-ppt-mcp to Cline settings!');
-				} catch (e) {
-					vscode.window.showErrorMessage('Failed to parse cline_mcp_settings.json');
+			for (const configPath of configPaths) {
+				if (fs.existsSync(configPath)) {
+					try {
+						const content = fs.readFileSync(configPath, 'utf-8');
+						const json = JSON.parse(content || '{}');
+
+						if (!json.mcpServers) json.mcpServers = {};
+						json.mcpServers["pdf-ppt"] = {
+							"command": "npx",
+							"args": ["-y", "pdf-ppt-mcp@latest"]
+						};
+
+						fs.writeFileSync(configPath, JSON.stringify(json, null, 2));
+						success = true;
+					} catch (e) {
+						// Continue if we fail to parse one file
+					}
 				}
+			}
+
+			if (success) {
+				vscode.window.showInformationMessage('Successfully auto-configured pdf-ppt-mcp across active AI assistants!');
 			} else {
 				vscode.env.clipboard.writeText(`{\n  "mcpServers": {\n    "pdf-ppt": {\n      "command": "npx",\n      "args": ["-y", "pdf-ppt-mcp@latest"]\n    }\n  }\n}`);
-				vscode.window.showWarningMessage('Cline not found. Copied raw JSON config to clipboard instead.');
+				vscode.window.showWarningMessage('AI Assistant configs not found. Copied JSON snippet to clipboard to paste manually.');
 			}
 		})
 	);
