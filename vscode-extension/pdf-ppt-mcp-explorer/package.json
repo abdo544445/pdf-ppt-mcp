@@ -2,7 +2,8 @@
   "name": "pdf-ppt-mcp-explorer",
   "displayName": "PDF/PPT MCP Explorer",
   "description": "Visual explorer and AI config wrapper for pdf-ppt-mcp",
-  "version": "0.0.4",
+  "icon": "images/icon.png",
+  "version": "0.0.5",
   "publisher": "Abdoalatrash",
   "engines": {
     "vscode": "^1.90.0"
