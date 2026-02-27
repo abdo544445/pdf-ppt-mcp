@@ -2,7 +2,7 @@
   "name": "pdf-ppt-mcp-explorer",
   "displayName": "PDF/PPT MCP Explorer",
   "description": "Visual explorer and AI config wrapper for pdf-ppt-mcp",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "Abdoalatrash",
   "engines": {
     "vscode": "^1.90.0"
@@ -53,14 +53,39 @@
         "icon": "$(open-preview)"
       },
       {
-        "command": "pdf-ppt-mcp-explorer.ocrDocument",
-        "title": "Force OCR (Slow)",
-        "icon": "$(eye)"
+        "command": "pdf-ppt-mcp-explorer.askAI",
+        "title": "Ask AI about Document",
+        "icon": "$(comment-discussion)"
       },
       {
         "command": "pdf-ppt-mcp-explorer.copyPathForAI",
         "title": "Copy Prompt for AI",
         "icon": "$(clippy)"
+      },
+      {
+        "command": "pdf-ppt-mcp-explorer.openExternally",
+        "title": "Open Native File (Word/PDF)",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "pdf-ppt-mcp-explorer.revealInOS",
+        "title": "Reveal in OS Explorer",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "pdf-ppt-mcp-explorer.deleteFile",
+        "title": "Delete Document",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "pdf-ppt-mcp-explorer.addExternalFile",
+        "title": "Add External File to Workspace",
+        "icon": "$(add)"
+      },
+      {
+        "command": "pdf-ppt-mcp-explorer.ocrDocument",
+        "title": "Force OCR (Slow)",
+        "icon": "$(eye)"
       },
       {
         "command": "pdf-ppt-mcp-explorer.installMcpServer",
@@ -76,38 +101,65 @@
     "menus": {
       "view/title": [
         {
+          "command": "pdf-ppt-mcp-explorer.addExternalFile",
+          "when": "view == mcp-docs",
+          "group": "navigation@1"
+        },
+        {
           "command": "pdf-ppt-mcp-explorer.installMcpServer",
           "when": "view == mcp-docs",
-          "group": "navigation"
+          "group": "navigation@2"
         },
         {
           "command": "pdf-ppt-mcp-explorer.refreshList",
           "when": "view == mcp-docs",
-          "group": "navigation"
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
         {
-          "command": "pdf-ppt-mcp-explorer.previewDocument",
-          "group": "inline"
+          "command": "pdf-ppt-mcp-explorer.askAI",
+          "group": "1_main@1"
         },
         {
           "command": "pdf-ppt-mcp-explorer.copyPathForAI",
-          "group": "inline"
+          "group": "1_main@2"
         },
         {
-          "command": "pdf-ppt-mcp-explorer.ocrDocument",
-          "when": "viewItem =~ /pdf$/",
-          "group": "inline"
+          "command": "pdf-ppt-mcp-explorer.previewDocument",
+          "group": "1_main@3"
+        },
+        {
+          "command": "pdf-ppt-mcp-explorer.openExternally",
+          "group": "2_os@1"
+        },
+        {
+          "command": "pdf-ppt-mcp-explorer.revealInOS",
+          "group": "2_os@2"
+        },
+        {
+          "command": "pdf-ppt-mcp-explorer.deleteFile",
+          "group": "3_mod@1"
         }
       ],
       "explorer/context": [
         {
-          "command": "pdf-ppt-mcp-explorer.previewDocument",
+          "command": "pdf-ppt-mcp-explorer.askAI",
           "when": "resourceExtname == .pdf || resourceExtname == .docx || resourceExtname == .xlsx || resourceExtname == .ppt || resourceExtname == .csv",
           "group": "navigation"
         }
       ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "PDF/PPT MCP Explorer Settings",
+      "properties": {
+        "pdfPptMcpExplorer.defaultPrompt": {
+          "type": "string",
+          "default": "Please thoroughly analyze this document and provide a summary:",
+          "description": "The default phrase copied to your clipboard when using the 'Copy Prompt for AI' action."
+        }
+      }
     }
   },
   "scripts": {

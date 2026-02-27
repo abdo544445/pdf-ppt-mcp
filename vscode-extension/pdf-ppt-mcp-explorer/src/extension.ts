@@ -18,9 +18,65 @@ export function activate(context: vscode.ExtensionContext) {
 
 		vscode.commands.registerCommand('pdf-ppt-mcp-explorer.copyPathForAI', (node: DocumentNode | vscode.Uri) => {
 			const filePath = node instanceof vscode.Uri ? node.fsPath : node.filePath;
-			const prompt = `Please analyze this document: ${filePath}`;
+			const config = vscode.workspace.getConfiguration('pdfPptMcpExplorer');
+			const defaultPrompt = config.get<string>('defaultPrompt', 'Please thoroughly analyze this document and provide a summary:');
+			const prompt = `${defaultPrompt}\n\n${filePath}`;
 			vscode.env.clipboard.writeText(prompt);
 			vscode.window.showInformationMessage('Copied prompt to clipboard!');
+		}),
+
+		vscode.commands.registerCommand('pdf-ppt-mcp-explorer.askAI', async (node: DocumentNode | vscode.Uri) => {
+			const filePath = node instanceof vscode.Uri ? node.fsPath : node.filePath;
+			const question = await vscode.window.showInputBox({
+				prompt: `What do you want to ask the AI about ${path.basename(filePath)}?`,
+				placeHolder: "e.g., What are the main takeaways from this document?"
+			});
+			if (question) {
+				const prompt = `Regarding the document at: ${filePath}\n\nQuestion: ${question}\n\nPlease read the document and answer the question.`;
+				vscode.env.clipboard.writeText(prompt);
+				vscode.window.showInformationMessage('Prompt copied! Paste it in your AI Assistant.');
+			}
+		}),
+
+		vscode.commands.registerCommand('pdf-ppt-mcp-explorer.openExternally', async (node: DocumentNode | vscode.Uri) => {
+			const filePath = node instanceof vscode.Uri ? node.fsPath : node.filePath;
+			vscode.env.openExternal(vscode.Uri.file(filePath));
+		}),
+
+		vscode.commands.registerCommand('pdf-ppt-mcp-explorer.revealInOS', async (node: DocumentNode | vscode.Uri) => {
+			const filePath = node instanceof vscode.Uri ? node.fsPath : node.filePath;
+			vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(filePath));
+		}),
+
+		vscode.commands.registerCommand('pdf-ppt-mcp-explorer.deleteFile', async (node: DocumentNode | vscode.Uri) => {
+			const filePath = node instanceof vscode.Uri ? node.fsPath : node.filePath;
+			const selection = await vscode.window.showWarningMessage(`Are you sure you want to permanently delete ${path.basename(filePath)}?`, { modal: true }, 'Delete');
+			if (selection === 'Delete') {
+				await vscode.workspace.fs.delete(vscode.Uri.file(filePath), { useTrash: true });
+			}
+		}),
+
+		vscode.commands.registerCommand('pdf-ppt-mcp-explorer.addExternalFile', async () => {
+			if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+				vscode.window.showErrorMessage('You must have a workspace folder open to add external files.');
+				return;
+			}
+			const uris = await vscode.window.showOpenDialog({
+				canSelectMany: true,
+				openLabel: 'Add to Workspace',
+				filters: { 'Supported Documents': ['pdf', 'docx', 'xlsx', 'xls', 'pptx', 'ppt', 'csv'] }
+			});
+			if (uris && uris.length > 0) {
+				const targetFolder = vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, '.mcp-docs');
+				if (!fs.existsSync(targetFolder.fsPath)) {
+					fs.mkdirSync(targetFolder.fsPath);
+				}
+				for (const uri of uris) {
+					const dest = vscode.Uri.joinPath(targetFolder, path.basename(uri.fsPath));
+					await vscode.workspace.fs.copy(uri, dest, { overwrite: true });
+				}
+				vscode.window.showInformationMessage(`Added ${uris.length} file(s) to the workspace!`);
+			}
 		}),
 
 		vscode.commands.registerCommand('pdf-ppt-mcp-explorer.previewDocument', async (node: DocumentNode | vscode.Uri) => {
